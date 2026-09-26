@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: "Samsung Color Emoji", "SEC Color Emoji", "SamsungOne", "SamsungOneUI", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: text;
+    overflow: hidden;
+  }
+
+  html, body, #root {
+    height: 100%;
+    height: 100dvh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Glassmorphism & iOS styling effects */
+.ios-glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.ios-glass-subtle {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.45);
+}
+
+/* WhatsApp chat wallpaper */
+.chat-doodle-bg {
+  background-color: var(--bg-primary);
+}
+
+/* === THEME 1: WhatsApp Dark Green (Default) === */
+.theme-whatsapp {
+  --bg-primary: #0b141a;
+  --bubble-out-bg: linear-gradient(135deg, rgba(0, 92, 75, 0.95), rgba(0, 78, 63, 0.95));
+  --bubble-out-text: #e9edef;
+  --bubble-out-border: rgba(0, 168, 132, 0.3);
+  --bubble-in-bg: linear-gradient(135deg, rgba(32, 44, 51, 0.95), rgba(24, 34, 41, 0.95));
+  --bubble-in-text: #d1d7db;
+  --bubble-in-border: rgba(255, 255, 255, 0.08);
+  --time-color: rgba(255, 255, 255, 0.55);
+}
+
+/* === THEME 2: Classic Light === */
+.theme-light {
+  --bg-primary: #efeae2;
+  --bubble-out-bg: linear-gradient(135deg, #d9fdd3, #ccf8c5);
+  --bubble-out-text: #111b21;
+  --bubble-out-border: rgba(0, 0, 0, 0.06);
+  --bubble-in-bg: #ffffff;
+  --bubble-in-text: #111b21;
+  --bubble-in-border: rgba(0, 0, 0, 0.08);
+  --time-color: rgba(0, 0, 0, 0.55);
+}
+.theme-light .chat-doodle-bg {
+  background-image: none;
+}
+.theme-light header {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #111b21 !important;
+}
+.theme-light header h1 {
+  color: #111b21 !important;
+}
+.theme-light aside {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #111b21 !important;
+}
+.theme-light aside h2, .theme-light aside h3 {
+  color: #4b5563 !important;
+}
+.theme-light aside .text-white {
+  color: #111b21 !important;
+}
+.theme-light aside .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.theme-light aside .text-slate-300 {
+  color: #374151 !important;
+}
+
+/* === THEME 3: AMOLED Pure Black === */
+.theme-amoled {
+  --bg-primary: #000000;
+  --bubble-out-bg: #004d40;
+  --bubble-out-text: #ffffff;
+  --bubble-out-border: rgba(0, 200, 150, 0.4);
+  --bubble-in-bg: #141414;
+  --bubble-in-text: #f0f0f0;
+  --bubble-in-border: rgba(255, 255, 255, 0.15);
+  --time-color: rgba(255, 255, 255, 0.6);
+}
+.theme-amoled .chat-doodle-bg {
+  background-image: none;
+}
+.theme-amoled header {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.theme-amoled aside {
+  background-color: rgba(5, 5, 5, 0.98) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Bubble classes */
+.cl-bubble-out {
+  background: var(--bubble-out-bg);
+  color: var(--bubble-out-text);
+  border: 1px solid var(--bubble-out-border);
+}
+
+.cl-bubble-in {
+  background: var(--bubble-in-bg);
+  color: var(--bubble-in-text);
+  border: 1px solid var(--bubble-in-border);
+}
+
+.cl-time-text {
+  color: var(--time-color);
+}
