@@ -44,11 +44,15 @@ export const GlassHeader: React.FC<GlassHeaderProps> = ({
         <button
           onClick={onToggleSidebar}
           title="Toggle Chat Info & Participants"
-          className={`relative shrink-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500/25 to-teal-600/30 border flex items-center justify-center text-emerald-300 shadow-md transition-all active:scale-95 ${
-            isSidebarOpen ? 'border-emerald-400 ring-2 ring-emerald-500/30' : 'border-emerald-500/30 hover:border-emerald-400/50'
+          className={`relative shrink-0 w-10 h-10 rounded-2xl overflow-hidden border flex items-center justify-center shadow-md transition-all active:scale-95 p-0.5 bg-black/60 ${
+            isSidebarOpen ? 'border-emerald-400 ring-2 ring-emerald-500/40' : 'border-white/15 hover:border-emerald-400/50'
           }`}
         >
-          <Sparkles className="w-5 h-5 text-emerald-300" />
+          <img
+            src="/logo.png"
+            alt="ChatLens Logo"
+            className="w-full h-full object-contain rounded-xl"
+          />
         </button>
 
         <div className="min-w-0">

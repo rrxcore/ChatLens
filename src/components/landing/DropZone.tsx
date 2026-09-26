@@ -62,7 +62,17 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileLoaded, onLoadDemo }) 
     <div className="flex-1 w-full h-full overflow-y-auto overscroll-contain flex flex-col items-center justify-center p-4 sm:p-8 select-none">
       <div className="max-w-2xl w-full my-auto space-y-8 text-center animate-in fade-in duration-300">
         {/* Brand Header */}
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden shadow-2xl border border-white/15 p-1 bg-black/60 ring-2 ring-emerald-500/20 hover:scale-105 transition-transform duration-300">
+              <img
+                src="/logo.png"
+                alt="ChatLens Logo"
+                className="w-full h-full object-contain rounded-2xl"
+              />
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ios-glass bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Interactive Conversation Reader</span>
