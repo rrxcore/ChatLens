@@ -44,14 +44,18 @@ export const GlassHeader: React.FC<GlassHeaderProps> = ({
         <button
           onClick={onToggleSidebar}
           title="Toggle Chat Info & Participants"
-          className={`relative shrink-0 w-10 h-10 rounded-2xl overflow-hidden border flex items-center justify-center shadow-md transition-all active:scale-95 p-0.5 bg-black/60 ${
-            isSidebarOpen ? 'border-emerald-400 ring-2 ring-emerald-500/40' : 'border-white/15 hover:border-emerald-400/50'
+          className={`relative shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${
+            isSidebarOpen
+              ? 'bg-cyan-500/15 border border-cyan-400/50 ring-2 ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+              : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-400/40'
           }`}
         >
+          {/* Subtle static ambient glow behind logo */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 blur-md pointer-events-none" />
           <img
             src="/logo.png"
             alt="ChatLens Logo"
-            className="w-full h-full object-contain rounded-xl"
+            className="relative w-8 h-8 object-contain logo-static-glow select-none pointer-events-none"
           />
         </button>
 

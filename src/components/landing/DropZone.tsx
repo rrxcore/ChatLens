@@ -63,12 +63,14 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileLoaded, onLoadDemo }) 
       <div className="max-w-2xl w-full my-auto space-y-8 text-center animate-in fade-in duration-300">
         {/* Brand Header */}
         <div className="space-y-4">
-          <div className="flex justify-center">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden shadow-2xl border border-white/15 p-1 bg-black/60 ring-2 ring-emerald-500/20 hover:scale-105 transition-transform duration-300">
+          <div className="flex justify-center mb-1">
+            <div className="relative flex items-center justify-center">
+              {/* Ambient radial glow backdrop */}
+              <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-cyan-500/25 via-blue-500/15 to-purple-500/30 blur-xl pointer-events-none animate-logo-breathe" />
               <img
                 src="/logo.png"
                 alt="ChatLens Logo"
-                className="w-full h-full object-contain rounded-2xl"
+                className="relative w-20 h-20 sm:w-24 sm:h-24 object-contain animate-logo-breathe select-none pointer-events-none"
               />
             </div>
           </div>

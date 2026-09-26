@@ -149,3 +149,26 @@
 .cl-time-text {
   color: var(--time-color);
 }
+
+/* Logo Glowing & Breathing Animations */
+@keyframes logoBreathe {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 28px rgba(56, 189, 248, 0.75)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.45));
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.52;
+    filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.25)) drop-shadow(0 0 20px rgba(168, 85, 247, 0.15));
+    transform: scale(0.97);
+  }
+}
+
+.animate-logo-breathe {
+  animation: logoBreathe 3s ease-in-out infinite;
+}
+
+.logo-static-glow {
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7)) drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));
+}
+
