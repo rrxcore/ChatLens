@@ -56,6 +56,16 @@ function splitEmojis(str: string): string[] {
 function renderFormattedLine(line: string, searchQuery?: string): React.ReactNode {
   if (!line) return null;
 
+  // Quoted reply in markdown or WhatsApp format: "> _You: text_"
+  if (line.startsWith('> ') || line.startsWith('>')) {
+    const quoteText = line.replace(/^>\s?/, '');
+    return (
+      <blockquote className="border-l-2 border-emerald-400/70 bg-black/25 px-2.5 py-1 rounded-r-md text-[13px] text-slate-300 italic my-1 shadow-sm">
+        {renderFormattedLine(quoteText, searchQuery)}
+      </blockquote>
+    );
+  }
+
   // Split line by URLs to preserve links prominently
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;

@@ -102,7 +102,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileLoaded, onLoadDemo }) 
         >
           <input
             type="file"
-            accept=".txt,.md,text/plain,text/markdown"
+            accept=".txt,.md,.markdown"
             onChange={handleFileChange}
             id="file-upload"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"

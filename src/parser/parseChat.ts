@@ -2,40 +2,55 @@ import type { ChatSession, Message, Participant } from '../types/chat';
 import {
   ANDROID_HEADER_REGEX,
   IOS_HEADER_REGEX,
+  MD_TIME_MSG_REGEX,
+  MD_DATE_HEADING_REGEX,
   MEDIA_PATTERNS,
   SYSTEM_PATTERNS,
   URL_REGEX,
   isPureEmoji,
 } from './regexPatterns';
-import { getParticipantColor, parseWhatsAppDate } from './dateUtils';
+import {
+  getParticipantColor,
+  parseWhatsAppDate,
+  parseHeadingDate,
+  detectDateFormat,
+  toLocalDateString,
+} from './dateUtils';
 
 export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp Chat.txt'): ChatSession {
   // Pre-process text to support .md (Markdown) files cleanly
   let cleanedText = rawText;
 
   // 1. Remove YAML frontmatter if present (e.g., --- \n title: ... \n ---)
-  cleanedText = cleanedText.replace(/^---[\r\n]+[\s\S]*?[\r\n]+---[\r\n]+/, '');
+  cleanedText = cleanedText.replace(/^---[\r\n]+[\s\S]*?[\r\n]+---[\r\n]*/, '');
 
-  // 2. Extract potential markdown title ONLY from top header before messages start
+  // 2. Extract potential markdown title from top header
   let extractedTitle: string | null = null;
-  const initialLines = cleanedText.split(/\r?\n/).slice(0, 10);
+  const initialLines = cleanedText.split(/\r?\n/).slice(0, 15);
   for (const rawL of initialLines) {
     const l = rawL.trim();
     if (!l) continue;
-    // If a message timestamp is encountered, stop
-    if (ANDROID_HEADER_REGEX.test(l) || IOS_HEADER_REGEX.test(l)) {
+    if (ANDROID_HEADER_REGEX.test(l) || IOS_HEADER_REGEX.test(l) || MD_TIME_MSG_REGEX.test(l)) {
       break;
     }
     if (/^#+\s+/.test(l)) {
-      extractedTitle = l.replace(/^#+\s+/, '').trim();
-      break;
+      if (parseHeadingDate(l)) break;
+      const t = l.replace(/^#+\s+/, '').replace(/^WhatsApp Chat Export:\s*/i, '').trim();
+      if (t) {
+        extractedTitle = t;
+        break;
+      }
     }
   }
+
+  // 3. Detect global date format (DMY vs MDY vs YMD)
+  const dateFormat = detectDateFormat(cleanedText);
 
   const lines = cleanedText.split(/\r?\n/);
   const messages: Message[] = [];
   const participantMap = new Map<string, { messageCount: number; mediaCount: number; wordCount: number; firstDate?: Date; lastDate?: Date }>();
 
+  let currentSectionDate: Date | null = null;
   let currentMsg: Message | null = null;
   let msgCounter = 0;
 
@@ -43,11 +58,11 @@ export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp 
     if (!currentMsg) return;
 
     currentMsg.content = currentMsg.content.trimEnd();
-    
+
     // Check if media
     const isMedia = MEDIA_PATTERNS.some(p => p.test(currentMsg!.content));
     currentMsg.isMedia = isMedia;
-    
+
     // Check if pure emoji
     currentMsg.isPureEmoji = isPureEmoji(currentMsg.content);
 
@@ -79,29 +94,31 @@ export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
 
-    // If line is a markdown code fence like ```text or ```, skip it so it doesn't pollute the chat
+    // If line is a markdown code fence like ```text or ```, skip it
     if (/^```[a-zA-Z0-9_-]*$/.test(rawLine.trim())) {
       continue;
     }
 
-    // If line is a top-level markdown heading like # Title, skip if we haven't started messages yet
-    if (/^#+\s+/.test(rawLine.trim()) && messages.length === 0 && !currentMsg) {
-      continue;
-    }
+    // Clean invisible directional marks
+    const line = rawLine.replace(/[\u200e\u200f\u202a-\u202e]/g, '').trimStart();
 
-    // Clean invisible RTL/LTR markers and optional markdown blockquote prefix (> )
-    let line = rawLine.replace(/[\u200e\u200f\u202a-\u202e]/g, '').trimStart();
-    if (line.startsWith('> ')) {
-      line = line.substring(2).trimStart();
-    }
-
+    // Skip empty lines before the first message
     if (!line.trim() && !currentMsg) continue;
 
-    // Check Android match first, then iOS
-    let match = line.match(ANDROID_HEADER_REGEX);
-    if (!match) {
-      match = line.match(IOS_HEADER_REGEX);
+    // Check if this is a Date Heading (e.g., "## June 15, 2026", "## 15/06/2026")
+    if (MD_DATE_HEADING_REGEX.test(line)) {
+      const headingDate = parseHeadingDate(line);
+      if (headingDate) {
+        finalizeCurrentMessage();
+        currentSectionDate = headingDate;
+        continue;
+      }
     }
+
+    // Check Android match first, then iOS
+    let match = line.match(ANDROID_HEADER_REGEX) || line.match(IOS_HEADER_REGEX);
+    // If not standard match, check markdown time-only message if under a date heading
+    let mdMatch = !match && currentSectionDate ? line.match(MD_TIME_MSG_REGEX) : null;
 
     if (match) {
       finalizeCurrentMessage();
@@ -110,28 +127,26 @@ export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp 
       const timeStr = match[2];
       const remainder = match[3] || '';
 
-      const timestamp = parseWhatsAppDate(dateStr, timeStr);
-
-      // Check if remainder has a sender colon "Sender: message"
-      const colonIdx = remainder.indexOf(': ');
+      const timestamp = parseWhatsAppDate(dateStr, timeStr, dateFormat);
+      currentSectionDate = timestamp;
 
       let sender = '';
       let content = '';
       let isSystem = false;
 
-      if (colonIdx !== -1) {
-        sender = remainder.substring(0, colonIdx).trim();
-        content = remainder.substring(colonIdx + 2);
+      const senderMatch = remainder.match(/^(?:\*\*([^*]+?):\*\*|\*\*([^*]+?)\*\*:\s*|__([^_]+?):__|__([^_]+?)__:\s*|([^:\[\]\n]+?):\s*)(.*)$/);
+
+      if (senderMatch) {
+        sender = (senderMatch[1] || senderMatch[2] || senderMatch[3] || senderMatch[4] || senderMatch[5] || '').trim();
+        content = senderMatch[6].replace(/^\s/, '');
       } else {
-        // System message (e.g. "Messages and calls are end-to-end encrypted")
         sender = '__system__';
-        content = remainder.trim();
+        content = remainder.replace(/^[-–—]\s*/, '').trim();
         isSystem = true;
       }
 
-      // Check if remainder itself is a known system notification
       if (!isSystem && SYSTEM_PATTERNS.some(p => p.test(content) || p.test(remainder))) {
-        if (colonIdx === -1) {
+        if (!senderMatch) {
           isSystem = true;
           sender = '__system__';
         }
@@ -141,8 +156,69 @@ export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp 
         id: `msg-${++msgCounter}`,
         index: msgCounter - 1,
         timestamp,
-        dateStr: timestamp.toISOString().split('T')[0],
-        timeStr,
+        dateStr: toLocalDateString(timestamp),
+        timeStr: timeStr.trim().replace(/\u202f/g, ' '),
+        sender,
+        content,
+        isSystem,
+        isMedia: false,
+        isDeleted: /this message was deleted|you deleted this message/i.test(content),
+        isPureEmoji: false,
+        links: [],
+      };
+    } else if (mdMatch) {
+      finalizeCurrentMessage();
+
+      const timeStr = mdMatch[1];
+      const remainder = mdMatch[2] || '';
+
+      const cleanTime = timeStr.trim().replace(/\u202f/g, ' ');
+      const isPM = /pm/i.test(cleanTime);
+      const isAM = /am/i.test(cleanTime);
+      const digits = cleanTime.replace(/[^\d:]/g, '').split(':').map(d => parseInt(d, 10));
+      let hours = digits[0] || 0;
+      let minutes = digits[1] || 0;
+      let seconds = digits[2] || 0;
+      if (isPM && hours < 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+
+      const timestamp = new Date(
+        currentSectionDate!.getFullYear(),
+        currentSectionDate!.getMonth(),
+        currentSectionDate!.getDate(),
+        hours,
+        minutes,
+        seconds
+      );
+
+      let sender = '';
+      let content = '';
+      let isSystem = false;
+
+      const senderMatch = remainder.match(/^(?:\*\*([^*]+?):\*\*|\*\*([^*]+?)\*\*:\s*|__([^_]+?):__|__([^_]+?)__:\s*|([^:\[\]\n]+?):\s*)(.*)$/);
+
+      if (senderMatch) {
+        sender = (senderMatch[1] || senderMatch[2] || senderMatch[3] || senderMatch[4] || senderMatch[5] || '').trim();
+        content = senderMatch[6].replace(/^\s/, '');
+      } else {
+        sender = '__system__';
+        content = remainder.replace(/^[-–—]\s*/, '').trim();
+        isSystem = true;
+      }
+
+      if (!isSystem && SYSTEM_PATTERNS.some(p => p.test(content) || p.test(remainder))) {
+        if (!senderMatch) {
+          isSystem = true;
+          sender = '__system__';
+        }
+      }
+
+      currentMsg = {
+        id: `msg-${++msgCounter}`,
+        index: msgCounter - 1,
+        timestamp,
+        dateStr: toLocalDateString(timestamp),
+        timeStr: cleanTime,
         sender,
         content,
         isSystem,
@@ -193,8 +269,20 @@ export function parseWhatsAppChat(rawText: string, fileName: string = 'WhatsApp 
     }
   }
 
-  const startDate = messages.length > 0 ? messages[0].timestamp : null;
-  const endDate = messages.length > 0 ? messages[messages.length - 1].timestamp : null;
+  let startDate: Date | null = null;
+  let endDate: Date | null = null;
+  if (messages.length > 0) {
+    let minTime = messages[0].timestamp.getTime();
+    let maxTime = messages[0].timestamp.getTime();
+    for (let i = 1; i < messages.length; i++) {
+      const t = messages[i].timestamp.getTime();
+      if (t < minTime) minTime = t;
+      if (t > maxTime) maxTime = t;
+    }
+    startDate = new Date(minTime);
+    endDate = new Date(maxTime);
+  }
+
   const totalMedia = messages.filter(m => m.isMedia).length;
   const totalLinks = messages.reduce((acc, m) => acc + m.links.length, 0);
 

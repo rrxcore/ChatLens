@@ -11,6 +11,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import type { ChatSession, FilterState } from '../../types/chat';
+import { toLocalDateString } from '../../parser/dateUtils';
 
 interface GlassSidebarProps {
   session: ChatSession;
@@ -34,10 +35,10 @@ export const GlassSidebar: React.FC<GlassSidebarProps> = ({
   const totalMsgs = session.totalMessages || 1;
 
   const minDateStr = session.startDate
-    ? session.startDate.toISOString().split('T')[0]
+    ? toLocalDateString(session.startDate)
     : undefined;
   const maxDateStr = session.endDate
-    ? session.endDate.toISOString().split('T')[0]
+    ? toLocalDateString(session.endDate)
     : undefined;
 
   const handleSelectSender = (senderName: string | null) => {
@@ -90,12 +91,12 @@ export const GlassSidebar: React.FC<GlassSidebarProps> = ({
     } else if (type === 'last-7') {
       const d = new Date(session.endDate);
       d.setDate(d.getDate() - 7);
-      const start = d.toISOString().split('T')[0];
+      const start = toLocalDateString(d);
       onFilterChange({ ...filter, startDate: start, endDate: maxDateStr || null });
     } else if (type === 'last-30') {
       const d = new Date(session.endDate);
       d.setDate(d.getDate() - 30);
-      const start = d.toISOString().split('T')[0];
+      const start = toLocalDateString(d);
       onFilterChange({ ...filter, startDate: start, endDate: maxDateStr || null });
     }
   };

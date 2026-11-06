@@ -1,11 +1,17 @@
 // WhatsApp timestamp and line header regexes
 
 // Android: "25/09/24, 10:32 PM - " or "25/09/2024, 22:32 - "
-// Also handles hidden directional marks: \u200e (LTR), \u200f (RTL), \u202a, etc.
-export const ANDROID_HEADER_REGEX = /^[\u200e\u200f\u202a-\u202e\s]*(\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)\s*[-–—]\s*(.*)$/;
+// Also handles hidden directional marks: \u200e (LTR), \u200f (RTL), \u202a, etc. and narrow non-breaking space \u202f
+export const ANDROID_HEADER_REGEX = /^[\u200e\u200f\u202a-\u202e\s]*(\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[AaPp][Mm])?)\s*[-–—]\s*(.*)$/;
 
 // iOS: "[25/09/24, 10:32:15 PM] " or "[25/09/2024, 22:32:15] "
-export const IOS_HEADER_REGEX = /^[\u200e\u200f\u202a-\u202e\s]*\[(\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)\]\s*(.*)$/;
+export const IOS_HEADER_REGEX = /^[\u200e\u200f\u202a-\u202e\s]*\[(\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[AaPp][Mm])?)\]\s*(.*)$/;
+
+// Markdown time-only message header (under a date heading): "[11:55 PM] **Sender:** message" or "[4:58 PM] You: message"
+export const MD_TIME_MSG_REGEX = /^\[(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[AaPp][Mm])?)\]\s*(.*)$/;
+
+// Markdown date heading: "## June 15, 2026" or "### 15/06/2026"
+export const MD_DATE_HEADING_REGEX = /^#+\s+(.+)$/;
 
 // URL extraction regex
 export const URL_REGEX = /(https?:\/\/[^\s<>"'{}|\\^`[\]]+)/gi;
@@ -14,12 +20,19 @@ export const URL_REGEX = /(https?:\/\/[^\s<>"'{}|\\^`[\]]+)/gi;
 export const MEDIA_PATTERNS = [
   /<media omitted>/i,
   /media omitted/i,
+  /<image omitted>/i,
   /image omitted/i,
+  /<video omitted>/i,
   /video omitted/i,
+  /<audio omitted>/i,
   /audio omitted/i,
+  /<sticker omitted>/i,
   /sticker omitted/i,
+  /<gif omitted>/i,
   /gif omitted/i,
+  /<document omitted>/i,
   /document omitted/i,
+  /<contact card omitted>/i,
   /contact card omitted/i,
   /voice call/i,
   /video call/i,
@@ -27,6 +40,7 @@ export const MEDIA_PATTERNS = [
   /missed video call/i,
   /\(file attached\)/i,
   /<attached:.*>/i,
+  /\[(?:document|image|video|audio|sticker|gif|contact card|voice note|call)\]/i,
 ];
 
 // System notification patterns
@@ -48,6 +62,7 @@ export const SYSTEM_PATTERNS = [
   /pinned a message/i,
   /turned on disappearing messages/i,
   /turned off disappearing messages/i,
+  /^\[?(?:call|missed call|voice call|video call)\]?$/i,
 ];
 
 // Single, double, or triple emoji test (including emoji modifiers, zero-width joiners, flags)
